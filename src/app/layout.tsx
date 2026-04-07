@@ -5,7 +5,7 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'RestaurantDB - Base de dades de restaurants',
+  title: 'SomDeMenjar - Base de dades de restaurants',
   description: 'Cerca i descobreix els millors restaurants amb valoracions detallades',
 }
 
