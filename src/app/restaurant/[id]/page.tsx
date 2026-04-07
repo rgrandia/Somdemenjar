@@ -59,7 +59,7 @@ export default function DetallRestaurant() {
         alert(error.error || "Error eliminant el restaurant");
       }
     } catch (err) {
-      alert('Error de connexió');
+      alert("Error de connexió");
     }
   }
 
