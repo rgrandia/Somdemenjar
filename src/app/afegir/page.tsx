@@ -381,58 +381,20 @@ export default function AfegirRestaurant() {
             </div>
           </div>
 
-          {/* Contacte i notes */}
+          {/* Notes */}
           <div className="card">
             <div className="flex items-center gap-2 mb-4">
               <MapPin className="w-5 h-5 text-purple-600" />
-              <h2 className="text-lg font-semibold">Contacte i Notes</h2>
+              <h2 className="text-lg font-semibold">Notes</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="label">Telèfon</label>
-                <input
-                  type="tel"
-                  name="telefon"
-                  className="input-field"
-                  placeholder="+34 123 456 789"
-                />
-              </div>
-              <div>
-                <label className="label">Pàgina web</label>
-                <input
-                  type="url"
-                  name="web"
-                  className="input-field"
-                  placeholder="https://..."
-                />
-              </div>
-              <div>
-                <label className="label">Instagram</label>
-                <input
-                  type="text"
-                  name="instagram"
-                  className="input-field"
-                  placeholder="@nomdelcompte"
-                />
-              </div>
-              <div>
-                <label className="label">Afegit per</label>
-                <input
-                  type="text"
-                  name="afegitPer"
-                  className="input-field"
-                  placeholder="El teu nom (opcional)"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="label">Notes / Comentaris</label>
-                <textarea
-                  name="notes"
-                  rows={3}
-                  className="input-field"
-                  placeholder="Recomanacions especials, plats destacats, etc."
-                />
-              </div>
+            <div>
+              <label className="label">Comentaris / Recomanacions</label>
+              <textarea
+                name="notes"
+                rows={4}
+                className="input-field"
+                placeholder="Recomanacions especials, plats destacats, ambient, etc."
+              />
             </div>
           </div>
 
