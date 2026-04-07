@@ -173,7 +173,7 @@ async function carregarRestaurants() {
               <div className="bg-red-600 p-2 rounded-lg">
                 <UtensilsCrossed className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">RestaurantDB</h1>
+              <h1 className="text-2xl font-bold text-gray-900">SomDeMenjar</h1>
             </div>
             <Link
               href="/afegir"
