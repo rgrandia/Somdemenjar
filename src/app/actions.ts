@@ -48,7 +48,7 @@ export async function crearRestaurant(
     // Processar tipus d'àpats
     const tipusApats = formData.getAll('tipusApats') as TipusApat[];
 
-    // Crear objecte restaurant
+    // Crear objecte restaurant (SENSE dades de contacte)
     const restaurant = {
       nom,
       direccio,
@@ -70,11 +70,12 @@ export async function crearRestaurant(
       puntuacioCartaVins: parseInt(formData.get('puntuacioCartaVins') as string) || 0,
       puntuacioRapidesa: parseInt(formData.get('puntuacioRapidesa') as string) || 0,
       notes: formData.get('notes') as string || '',
-      telefon: formData.get('telefon') as string || '',
-      web: formData.get('web') as string || '',
-      instagram: formData.get('instagram') as string || '',
-      afegitPer: formData.get('afegitPer') as string || 'Anònim',
+      // Camps de contacte eliminats - no s'envien
+      afegitPer: 'Anònim', // Valor per defecte
     };
+
+    // Debug: mostrar què s'envia (per veure a la consola de Vercel)
+    console.log('Restaurant a crear:', restaurant);
 
     // Guardar via Apps Script
     await afegirRestaurant(restaurant, password);
@@ -85,12 +86,12 @@ export async function crearRestaurant(
       success: true,
       message: `Restaurant "${nom}" creat correctament!`,
     };
-  } catch (error) {
-    console.error('Error creant restaurant:', error);
+  } catch (error: any) {
+    console.error('Error detallat creant restaurant:', error);
     return {
       success: false,
-      message: 'Error en crear el restaurant',
-      errors: { general: ['Hi ha hagut un error inesperat'] },
+      message: `Error en crear el restaurant: ${error.message || 'Error desconegut'}`,
+      errors: { general: [error.message || 'Hi ha hagut un error inesperat'] },
     };
   }
 }
