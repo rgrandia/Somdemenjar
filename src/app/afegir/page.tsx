@@ -70,7 +70,7 @@ export default function AfegirRestaurant() {
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">Afegir Nou Restaurant</h1>
           <p className="text-gray-600 mt-2">
-            Completa el formulari amb la informació del restaurant. Contrasenya requerida: <strong>GRANDIA</strong>
+            Completa el formulari amb la informació del restaurant. Contrasenya requerida: <strong>ESCRIURE</strong>
           </p>
         </div>
 
@@ -102,7 +102,7 @@ export default function AfegirRestaurant() {
                   name="password"
                   required
                   className="input-field"
-                  placeholder="Introdueix GRANDIA"
+                  placeholder="Introdueix PASSWORD"
                 />
                 {state.errors?.password && (
                   <p className="text-red-600 text-sm mt-1">{state.errors.password[0]}</p>
