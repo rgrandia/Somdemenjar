@@ -76,8 +76,8 @@ export async function crearRestaurant(
       afegitPer: formData.get('afegitPer') as string || 'Anònim',
     };
 
-    // Guardar a Google Sheets
-    await afegirRestaurant(restaurant);
+    // Guardar via Apps Script
+    await afegirRestaurant(restaurant, password);
 
     revalidatePath('/');
     
