@@ -1,7 +1,6 @@
 // src/lib/sheets.ts
 import { Restaurant, TipusCuina, TipusApat } from '@/types';
 
-// ENGANXA AQUÍ LA URL DEL TEU WEB APP
 const APPS_SCRIPT_URL = process.env.NEXT_PUBLIC_APPS_SCRIPT_URL || '';
 
 export async function obtenirRestaurants(): Promise<Restaurant[]> {
@@ -13,31 +12,32 @@ export async function obtenirRestaurants(): Promise<Restaurant[]> {
     
     return data.restaurants.map((r: any) => ({
       id: String(r.id),
-      nom: r.nom,
-      direccio: r.direccio,
-      lat: r.lat,
-      lng: r.lng,
-      barri: r.barri,
-      ciutat: r.ciutat,
-      preuMig: r.preuMig,
-      tipusCuina: r.tipusCuina as TipusCuina,
-      tipusApats: r.tipusApats as TipusApat[],
-      puntuacioMenjar: r.puntuacioMenjar,
-      puntuacioAmbient: r.puntuacioAmbient,
-      puntuacioServei: r.puntuacioServei,
-      puntuacioQualitatPreu: r.puntuacioQualitatPreu,
-      puntuacioOriginalitat: r.puntuacioOriginalitat,
-      puntuacioSostenibilitat: r.puntuacioSostenibilitat,
-      puntuacioAccessibilitat: r.puntuacioAccessibilitat,
-      puntuacioTerrassa: r.puntuacioTerrassa,
-      puntuacioCartaVins: r.puntuacioCartaVins,
-      puntuacioRapidesa: r.puntuacioRapidesa,
-      notes: r.notes,
-      telefon: r.telefon,
-      web: r.web,
-      instagram: r.instagram,
-      dataAddicio: r.dataAddicio,
-      afegitPer: r.afegitPer,
+      nom: r.nom || '',
+      direccio: r.direccio || '',
+      lat: parseFloat(r.lat) || 0,
+      lng: parseFloat(r.lng) || 0,
+      barri: r.barri || '',
+      ciutat: r.ciutat || '',
+      preuMig: parseFloat(r.preuMig) || 0,
+      tipusCuina: (r.tipusCuina as TipusCuina) || 'ALTRES',
+      tipusApats: Array.isArray(r.tipusApats) ? r.tipusApats : (r.tipusApats || '').split(',').filter((x: string) => x),
+      puntuacioMenjar: parseInt(r.puntuacioMenjar) || 0,
+      puntuacioAmbient: parseInt(r.puntuacioAmbient) || 0,
+      puntuacioServei: parseInt(r.puntuacioServei) || 0,
+      puntuacioQualitatPreu: parseInt(r.puntuacioQualitatPreu) || 0,
+      puntuacioOriginalitat: parseInt(r.puntuacioOriginalitat) || 0,
+      puntuacioSostenibilitat: parseInt(r.puntuacioSostenibilitat) || 0,
+      puntuacioAccessibilitat: parseInt(r.puntuacioAccessibilitat) || 0,
+      puntuacioTerrassa: parseInt(r.puntuacioTerrassa) || 0,
+      puntuacioCartaVins: parseInt(r.puntuacioCartaVins) || 0,
+      puntuacioRapidesa: parseInt(r.puntuacioRapidesa) || 0,
+      notes: r.notes || '',
+      // Camps de contacte - opcionals, poden no existir al sheet
+      telefon: r.telefon || '',
+      web: r.web || '',
+      instagram: r.instagram || '',
+      dataAddicio: r.dataAddicio || new Date().toISOString(),
+      afegitPer: r.afegitPer || 'Anònim',
     }));
   } catch (error) {
     console.error('Error carregant restaurants:', error);
@@ -46,9 +46,12 @@ export async function obtenirRestaurants(): Promise<Restaurant[]> {
 }
 
 export async function afegirRestaurant(
-  restaurant: Omit<Restaurant, 'id' | 'dataAddicio'>,
+  restaurant: any,
   password: string
 ) {
+  console.log('Enviant a Apps Script:', APPS_SCRIPT_URL);
+  console.log('Dades:', { action: 'add', password: '***', restaurant });
+
   const response = await fetch(APPS_SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -60,29 +63,10 @@ export async function afegirRestaurant(
   });
 
   const data = await response.json();
+  console.log('Resposta Apps Script:', data);
   
   if (!response.ok || data.error) {
     throw new Error(data.error || 'Error guardant restaurant');
-  }
-  
-  return data;
-}
-
-export async function eliminarRestaurant(id: string, password: string) {
-  const response = await fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      action: 'delete',
-      password: password,
-      id: id,
-    }),
-  });
-
-  const data = await response.json();
-  
-  if (!response.ok || data.error) {
-    throw new Error(data.error || 'Error eliminant restaurant');
   }
   
   return data;
