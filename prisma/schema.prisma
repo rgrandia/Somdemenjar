@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TipusCuina {
+  ITALIANA
+  JAPONESA
+  MEXICANA
+  CATALANA
+  MEDITERRANIA
+  ASIATICA
+  FRANCESA
+  AMERICANA
+  ARAB
+  INDIA
+  VEGANA
+  VEGETARIANA
+  FUSIO
+  ALTRES
+}
+
+enum TipusApat {
+  ESMORZAR
+  DINAR
+  SOPAR
+  BRUNCH
+  VERMUT
+  TAPES
+}
+
+model Restaurant {
+  id          String   @id @default(uuid())
+  nom         String
+  direccio    String
+  lat         Float
+  lng         Float
+  barri       String
+  ciutat      String
+  preuMig     Float    @map("preu_mig")
+  tipusCuina  TipusCuina @map("tipus_cuina")
+  tipusApats  TipusApat[] @map("tipus_apats")
+
+  // Puntuacions 0-5
+  puntuacioMenjar        Int @map("puntuacio_menjar")
+  puntuacioAmbient       Int @map("puntuacio_ambient")
+  puntuacioServei        Int @map("puntuacio_servei")
+  puntuacioQualitatPreu  Int @map("puntuacio_qualitat_preu")
+  puntuacioOriginalitat  Int @map("puntuacio_originalitat")
+  puntuacioSostenibilitat Int @map("puntuacio_sostenibilitat")
+  puntuacioAccessibilitat Int @map("puntuacio_accessibilitat")
+  puntuacioTerrassa      Int @map("puntuacio_terrassa")
+  puntuacioCartaVins     Int @map("puntuacio_carta_vins")
+  puntuacioRapidesa      Int @map("puntuacio_rapidesa")
+
+  notes       String?
+  telefon     String?
+  web         String?
+  instagram   String?
+
+  dataAddicio DateTime @default(now()) @map("data_addicio")
+  afegitPer   String   @default("Anònim") @map("afegit_per")
+
+  @@index([ciutat])
+  @@index([barri])
+  @@index([tipusCuina])
+  @@index([preuMig])
+  @@map("restaurants")
+}
