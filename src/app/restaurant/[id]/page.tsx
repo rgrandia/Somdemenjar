@@ -37,8 +37,8 @@ export default function DetallRestaurant() {
       if (!resposta.ok) throw new Error('Restaurant no trobat');
       const dades = await resposta.json();
       setRestaurant(dades);
-    } catch (err) {
-      setError('No s'ha pogut carregar el restaurant');
+      } catch (err) {
+      setError("No s'ha pogut carregar el restaurant");
     } finally {
       setCarregant(false);
     }
@@ -56,7 +56,7 @@ export default function DetallRestaurant() {
         window.location.href = '/';
       } else {
         const error = await resposta.json();
-        alert(error.error || 'Error eliminant el restaurant');
+        alert(error.error || "Error eliminant el restaurant");
       }
     } catch (err) {
       alert('Error de connexió');
