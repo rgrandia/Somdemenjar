@@ -5,13 +5,28 @@ const APPS_SCRIPT_URL = process.env.NEXT_PUBLIC_APPS_SCRIPT_URL || '';
 
 export async function obtenirRestaurants(): Promise<Restaurant[]> {
   try {
-    const response = await fetch(`${APPS_SCRIPT_URL}?action=getAll`);
+    console.log('Fetching from:', APPS_SCRIPT_URL);
+    
+    const response = await fetch(`${APPS_SCRIPT_URL}?action=getAll`, {
+      cache: 'no-store', // Evitar cache
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log('Response data:', data);
     
     if (data.error) throw new Error(data.error);
     
-    return data.restaurants.map((r: any) => ({
-      id: String(r.id),
+    if (!data.restaurants || !Array.isArray(data.restaurants)) {
+      console.error('No restaurants array in response:', data);
+      return [];
+    }
+    
+    return data.restaurants.map((r: any, index: number) => ({
+      id: String(r.id || index),
       nom: r.nom || '',
       direccio: r.direccio || '',
       lat: parseFloat(r.lat) || 0,
@@ -20,7 +35,9 @@ export async function obtenirRestaurants(): Promise<Restaurant[]> {
       ciutat: r.ciutat || '',
       preuMig: parseFloat(r.preuMig) || 0,
       tipusCuina: (r.tipusCuina as TipusCuina) || 'ALTRES',
-      tipusApats: Array.isArray(r.tipusApats) ? r.tipusApats : (r.tipusApats || '').split(',').filter((x: string) => x),
+      tipusApats: Array.isArray(r.tipusApats) 
+        ? r.tipusApats 
+        : (r.tipusApats || '').toString().split(',').filter((x: string) => x),
       puntuacioMenjar: parseInt(r.puntuacioMenjar) || 0,
       puntuacioAmbient: parseInt(r.puntuacioAmbient) || 0,
       puntuacioServei: parseInt(r.puntuacioServei) || 0,
@@ -32,7 +49,6 @@ export async function obtenirRestaurants(): Promise<Restaurant[]> {
       puntuacioCartaVins: parseInt(r.puntuacioCartaVins) || 0,
       puntuacioRapidesa: parseInt(r.puntuacioRapidesa) || 0,
       notes: r.notes || '',
-      // Camps de contacte - opcionals, poden no existir al sheet
       telefon: r.telefon || '',
       web: r.web || '',
       instagram: r.instagram || '',
@@ -49,9 +65,6 @@ export async function afegirRestaurant(
   restaurant: any,
   password: string
 ) {
-  console.log('Enviant a Apps Script:', APPS_SCRIPT_URL);
-  console.log('Dades:', { action: 'add', password: '***', restaurant });
-
   const response = await fetch(APPS_SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -63,7 +76,6 @@ export async function afegirRestaurant(
   });
 
   const data = await response.json();
-  console.log('Resposta Apps Script:', data);
   
   if (!response.ok || data.error) {
     throw new Error(data.error || 'Error guardant restaurant');
