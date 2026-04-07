@@ -1,8 +1,8 @@
 'use server';
 
-import { prisma } from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
+import { afegirRestaurant } from '@/lib/sheets';
 import { TipusCuina, TipusApat } from '@/types';
+import { revalidatePath } from 'next/cache';
 
 const ADD_PASSWORD = process.env.ADD_PASSWORD || 'GRANDIA';
 
@@ -45,11 +45,20 @@ export async function crearRestaurant(
       };
     }
 
-    // Processar tipus d'àpats (múltiple)
+    // Processar tipus d'àpats
     const tipusApats = formData.getAll('tipusApats') as TipusApat[];
 
-    // Processar puntuacions
-    const puntuacions = {
+    // Crear objecte restaurant
+    const restaurant = {
+      nom,
+      direccio,
+      lat,
+      lng,
+      barri,
+      ciutat,
+      preuMig,
+      tipusCuina,
+      tipusApats: tipusApats.length > 0 ? tipusApats : [],
       puntuacioMenjar: parseInt(formData.get('puntuacioMenjar') as string) || 0,
       puntuacioAmbient: parseInt(formData.get('puntuacioAmbient') as string) || 0,
       puntuacioServei: parseInt(formData.get('puntuacioServei') as string) || 0,
@@ -60,42 +69,18 @@ export async function crearRestaurant(
       puntuacioTerrassa: parseInt(formData.get('puntuacioTerrassa') as string) || 0,
       puntuacioCartaVins: parseInt(formData.get('puntuacioCartaVins') as string) || 0,
       puntuacioRapidesa: parseInt(formData.get('puntuacioRapidesa') as string) || 0,
+      notes: formData.get('notes') as string || '',
+      telefon: formData.get('telefon') as string || '',
+      web: formData.get('web') as string || '',
+      instagram: formData.get('instagram') as string || '',
+      afegitPer: formData.get('afegitPer') as string || 'Anònim',
     };
 
-    // Validar rang de puntuacions (0-5)
-    for (const [key, value] of Object.entries(puntuacions)) {
-      if (value < 0 || value > 5) {
-        return {
-          success: false,
-          message: 'Puntuació fora de rang',
-          errors: { [key]: ['La puntuació ha de ser entre 0 i 5'] },
-        };
-      }
-    }
-
-    // Crear restaurant
-    const restaurant = await prisma.restaurant.create({
-      data: {
-        nom,
-        direccio,
-        lat,
-        lng,
-        barri,
-        ciutat,
-        preuMig,
-        tipusCuina,
-        tipusApats: tipusApats.length > 0 ? tipusApats : [],
-        ...puntuacions,
-        notes: formData.get('notes') as string || null,
-        telefon: formData.get('telefon') as string || null,
-        web: formData.get('web') as string || null,
-        instagram: formData.get('instagram') as string || null,
-        afegitPer: formData.get('afegitPer') as string || 'Anònim',
-      },
-    });
+    // Guardar a Google Sheets
+    await afegirRestaurant(restaurant);
 
     revalidatePath('/');
-
+    
     return {
       success: true,
       message: `Restaurant "${nom}" creat correctament!`,
@@ -107,31 +92,5 @@ export async function crearRestaurant(
       message: 'Error en crear el restaurant',
       errors: { general: ['Hi ha hagut un error inesperat'] },
     };
-  }
-}
-
-export async function obtenirRestaurants() {
-  try {
-    const restaurants = await prisma.restaurant.findMany({
-      orderBy: {
-        dataAddicio: 'desc',
-      },
-    });
-    return restaurants;
-  } catch (error) {
-    console.error('Error obtenint restaurants:', error);
-    return [];
-  }
-}
-
-export async function obtenirRestaurant(id: string) {
-  try {
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { id },
-    });
-    return restaurant;
-  } catch (error) {
-    console.error('Error obtenint restaurant:', error);
-    return null;
   }
 }
