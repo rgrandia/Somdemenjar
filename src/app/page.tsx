@@ -16,6 +16,8 @@ import { Restaurant, FiltresCerca, TIPUS_CUINA_OPTIONS, TIPUS_APAT_OPTIONS } fro
 import { formatPreu, calcularPuntuacioGlobal, calcularDistancia } from '@/lib/utils';
 import RestaurantCard from '@/components/RestaurantCard';
 import FiltresPanel from '@/components/FiltresPanel';
+import { obtenirRestaurants } from '@/lib/sheets';
+
 
 export default function Home() {
   const router = useRouter();
@@ -45,8 +47,6 @@ export default function Home() {
   useEffect(() => {
     aplicarFiltres();
   }, [filtres, restaurants, userLocation]);
-
-  import { obtenirRestaurants } from '@/lib/sheets';
 
 async function carregarRestaurants() {
   try {
