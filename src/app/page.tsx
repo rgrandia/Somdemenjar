@@ -47,17 +47,18 @@ export default function Home() {
     aplicarFiltres();
   }, [filtres, restaurants, userLocation]);
 
-  async function carregarRestaurants() {
-    try {
-      const resposta = await fetch('/api/restaurants');
-      const dades = await resposta.json();
-      setRestaurants(dades);
-    } catch (error) {
-      console.error('Error carregant restaurants:', error);
-    } finally {
-      setCarregant(false);
-    }
+  import { obtenirRestaurants } from '@/lib/sheets';
+
+async function carregarRestaurants() {
+  try {
+    const dades = await obtenirRestaurants();
+    setRestaurants(dades);
+  } catch (error) {
+    console.error('Error carregant restaurants:', error);
+  } finally {
+    setCarregant(false);
   }
+}
 
   function obtenirUbicacio() {
     if (navigator.geolocation) {
