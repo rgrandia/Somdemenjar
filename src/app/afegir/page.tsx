@@ -11,10 +11,12 @@ import {
   Star,
   Lock,
   Info,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
 import { crearRestaurant, ActionState } from '@/app/actions';
 import { TIPUS_CUINA_OPTIONS, TIPUS_APAT_OPTIONS, PUNTUACIO_LABELS } from '@/types';
+import CoordenadesExtractor from '@/components/CoordenadesExtractor';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -26,7 +28,7 @@ function SubmitButton() {
     >
       {pending ? (
         <>
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+          <Loader2 className="w-4 h-4 animate-spin" />
           Creant...
         </>
       ) : (
@@ -48,12 +50,100 @@ export default function AfegirRestaurant() {
   const router = useRouter();
   const [state, formAction] = useFormState(crearRestaurant, initialState);
   const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [carregantNom, setCarregantNom] = useState(false);
 
   // Si s'ha creat correctament, redirigir després d'uns segons
   if (state.success) {
     setTimeout(() => {
       router.push('/');
     }, 2000);
+  }
+
+  function handleCoordenadesTrobades(lat: number, lng: number, direccio: string) {
+    // Omplir els camps del formulari
+    const latInput = document.querySelector('input[name="lat"]') as HTMLInputElement;
+    const lngInput = document.querySelector('input[name="lng"]') as HTMLInputElement;
+    const direccioInput = document.querySelector('input[name="direccio"]') as HTMLInputElement;
+    
+    if (latInput) latInput.value = lat.toString();
+    if (lngInput) lngInput.value = lng.toString();
+    if (direccioInput && direccio) direccioInput.value = direccio;
+    
+    // Cercar el nom del restaurant automàticament
+    cercarNomRestaurant(lat, lng);
+  }
+
+  async function cercarNomRestaurant(lat: number, lng: number) {
+    setCarregantNom(true);
+    
+    try {
+      // Usar OpenStreetMap Nominatim per obtenir informació del lloc
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ca&extratags=1`
+      );
+      
+      if (!response.ok) throw new Error('Error en la cerca');
+      
+      const data = await response.json();
+      
+      // Intentar extreure el nom del restaurant
+      let nomRestaurant = '';
+      
+      // Prioritat 1: Nom del lloc (amenity, shop, etc.)
+      if (data.extratags?.name) {
+        nomRestaurant = data.extratags.name;
+      } else if (data.namedetails?.name) {
+        nomRestaurant = data.namedetails.name;
+      } else if (data.display_name) {
+        // Si no hi ha nom específic, agafar la primera part de la direcció
+        const parts = data.display_name.split(',');
+        // Buscar parts que semblin noms de negocis (no carrers ni números)
+        for (const part of parts) {
+          const trimmed = part.trim();
+          // Evitar carrers (Carrer, Av., Plaça, etc.)
+          if (!trimmed.match(/^(Carrer|C\/|Av|Avinguda|Pl|Plaça|Rbla|Rambla|Pg|Passeig|Ctra|Carretera)\s/i) &&
+              trimmed.length > 2 &&
+              !trimmed.match(/^\d+$/)) {
+            nomRestaurant = trimmed;
+            break;
+          }
+        }
+      }
+      
+      // Si hem trobat un nom, omplir el camp
+      if (nomRestaurant) {
+        const nomInput = document.querySelector('input[name="nom"]') as HTMLInputElement;
+        if (nomInput) {
+          nomInput.value = nomRestaurant;
+          // Animació visual per mostrar que s'ha omplert automàticament
+          nomInput.classList.add('bg-green-50');
+          setTimeout(() => nomInput.classList.remove('bg-green-50'), 2000);
+        }
+      }
+      
+      // També intentar extreure el barri i ciutat si no estan omplerts
+      const barriInput = document.querySelector('input[name="barri"]') as HTMLInputElement;
+      const ciutatInput = document.querySelector('input[name="ciutat"]') as HTMLInputElement;
+      
+      if (data.address) {
+        const { suburb, neighbourhood, city, town, village, municipality } = data.address;
+        
+        if (barriInput && !barriInput.value) {
+          const barri = suburb || neighbourhood || '';
+          if (barri) barriInput.value = barri;
+        }
+        
+        if (ciutatInput && !ciutatInput.value) {
+          const ciutat = city || town || village || municipality || '';
+          if (ciutat) ciutatInput.value = ciutat;
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error cercant nom del restaurant:', error);
+    } finally {
+      setCarregantNom(false);
+    }
   }
 
   return (
@@ -68,9 +158,9 @@ export default function AfegirRestaurant() {
             <ArrowLeft className="w-4 h-4" />
             Tornar al cercador
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Afegir Nou Restaurant</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Afegir Restaurant a SomDeMenjar</h1>
           <p className="text-gray-600 mt-2">
-            Completa el formulari amb la informació del restaurant. Contrasenya requerida: <strong>ESCRIURE</strong>
+            Completa el formulari amb la informació del restaurant. Contrasenya requerida: <strong>GRANDIA</strong>
           </p>
         </div>
 
@@ -88,6 +178,17 @@ export default function AfegirRestaurant() {
         )}
 
         <form action={formAction} className="space-y-8">
+          {/* Extreure coordenades de Google Maps */}
+          <CoordenadesExtractor onCoordenadesTrobades={handleCoordenadesTrobades} />
+
+          {/* Indicador de cerca de nom */}
+          {carregantNom && (
+            <div className="flex items-center gap-2 text-blue-600 bg-blue-50 p-3 rounded-lg">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-sm">Cercant informació del restaurant...</span>
+            </div>
+          )}
+
           {/* Contrasenya */}
           <div className="card border-l-4 border-red-500">
             <div className="flex items-center gap-2 mb-4">
@@ -102,7 +203,7 @@ export default function AfegirRestaurant() {
                   name="password"
                   required
                   className="input-field"
-                  placeholder="Introdueix PASSWORD"
+                  placeholder="Introdueix GRANDIA"
                 />
                 {state.errors?.password && (
                   <p className="text-red-600 text-sm mt-1">{state.errors.password[0]}</p>
@@ -135,9 +236,12 @@ export default function AfegirRestaurant() {
                   type="text"
                   name="nom"
                   required
-                  className="input-field"
+                  className="input-field transition-colors duration-500"
                   placeholder="Ex: Can Joan"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 S'omplirà automàticament si extreus coordenades de Google Maps
+                </p>
               </div>
               <div className="md:col-span-2">
                 <label className="label">Direcció completa *</label>
