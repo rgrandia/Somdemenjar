@@ -1,30 +1,51 @@
 // src/lib/sheets.ts
 import { Restaurant, TipusCuina, TipusApat } from '@/types';
 
-const APPS_SCRIPT_URL = process.env.NEXT_PUBLIC_APPS_SCRIPT_URL || '';
+const APPS_SCRIPT_URL =
+  process.env.APPS_SCRIPT_URL || process.env.NEXT_PUBLIC_APPS_SCRIPT_URL || '';
+
+function obtenirBaseUrlAppsScript(): string {
+  const url = APPS_SCRIPT_URL.trim();
+
+  if (!url) {
+    throw new Error('Falta configurar APPS_SCRIPT_URL (o NEXT_PUBLIC_APPS_SCRIPT_URL).');
+  }
+
+  return url;
+}
+
+function parsejarRespostaJson(text: string) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    const textNetejat = text.trim().replace(/^[^{[]+/, '');
+    return JSON.parse(textNetejat);
+  }
+}
 
 export async function obtenirRestaurants(): Promise<Restaurant[]> {
   try {
-    console.log('Fetching from:', APPS_SCRIPT_URL);
-    
-    const response = await fetch(`${APPS_SCRIPT_URL}?action=getAll`, {
-      cache: 'no-store', // Evitar cache
+    const appsScriptUrl = obtenirBaseUrlAppsScript();
+    const url = new URL(appsScriptUrl);
+    url.searchParams.set('action', 'getAll');
+
+    const response = await fetch(url.toString(), {
+      cache: 'no-store',
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
-    const data = await response.json();
-    console.log('Response data:', data);
-    
+
+    const data = parsejarRespostaJson(await response.text());
+
     if (data.error) throw new Error(data.error);
-    
+
     if (!data.restaurants || !Array.isArray(data.restaurants)) {
       console.error('No restaurants array in response:', data);
       return [];
     }
-    
+
     return data.restaurants.map((r: any, index: number) => ({
       id: String(r.id || index),
       nom: r.nom || '',
@@ -35,8 +56,8 @@ export async function obtenirRestaurants(): Promise<Restaurant[]> {
       ciutat: r.ciutat || '',
       preuMig: parseFloat(r.preuMig) || 0,
       tipusCuina: (r.tipusCuina as TipusCuina) || 'ALTRES',
-      tipusApats: Array.isArray(r.tipusApats) 
-        ? r.tipusApats 
+      tipusApats: Array.isArray(r.tipusApats)
+        ? r.tipusApats
         : (r.tipusApats || '').toString().split(',').filter((x: string) => x),
       puntuacioMenjar: parseInt(r.puntuacioMenjar) || 0,
       puntuacioAmbient: parseInt(r.puntuacioAmbient) || 0,
@@ -61,25 +82,30 @@ export async function obtenirRestaurants(): Promise<Restaurant[]> {
   }
 }
 
-export async function afegirRestaurant(
-  restaurant: any,
-  password: string
-) {
-  const response = await fetch(APPS_SCRIPT_URL, {
+export async function afegirRestaurant(restaurant: any, password: string) {
+  const appsScriptUrl = obtenirBaseUrlAppsScript();
+  const url = new URL(appsScriptUrl);
+  url.searchParams.set('action', 'add');
+
+  const response = await fetch(url.toString(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       action: 'add',
-      password: password,
-      restaurant: restaurant,
+      password,
+      restaurant,
     }),
   });
 
-  const data = await response.json();
-  
-  if (!response.ok || data.error) {
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const data = parsejarRespostaJson(await response.text());
+
+  if (data.error) {
     throw new Error(data.error || 'Error guardant restaurant');
   }
-  
+
   return data;
 }
