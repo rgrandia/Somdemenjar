@@ -11,12 +11,6 @@ function obtenirBaseUrlAppsScript(): string {
     throw new Error('Falta configurar APPS_SCRIPT_URL (o NEXT_PUBLIC_APPS_SCRIPT_URL).');
   }
 
-  if (url.includes('/macros/library/')) {
-    throw new Error(
-      'La URL configurada és d\'una llibreria de Apps Script. Cal la URL de desplegament Web App acabada en /exec.'
-    );
-  }
-
   return url;
 }
 
@@ -27,14 +21,6 @@ function parsejarRespostaJson(text: string) {
     const textNetejat = text.trim().replace(/^[^{[]+/, '');
     return JSON.parse(textNetejat);
   }
-}
-
-function obtenirArrayRestaurants(data: any): any[] {
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.restaurants)) return data.restaurants;
-  if (Array.isArray(data?.data)) return data.data;
-  if (Array.isArray(data?.result)) return data.result;
-  return [];
 }
 
 export async function obtenirRestaurants(): Promise<Restaurant[]> {
@@ -55,14 +41,12 @@ export async function obtenirRestaurants(): Promise<Restaurant[]> {
 
     if (data.error) throw new Error(data.error);
 
-    const restaurantsRaw = obtenirArrayRestaurants(data);
-
-    if (restaurantsRaw.length === 0) {
-      console.error('No s\'ha trobat cap array de restaurants a la resposta:', data);
+    if (!data.restaurants || !Array.isArray(data.restaurants)) {
+      console.error('No restaurants array in response:', data);
       return [];
     }
 
-    return restaurantsRaw.map((r: any, index: number) => ({
+    return data.restaurants.map((r: any, index: number) => ({
       id: String(r.id || index),
       nom: r.nom || '',
       direccio: r.direccio || '',
